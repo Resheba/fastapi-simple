@@ -2,27 +2,21 @@ import uvicorn
 from fastapi import FastAPI
 
 from database import manager
-from database.model import Author, Post
+
+from routers import AuthorRouter
 
 
 async def lifespan(app: FastAPI) -> None:
     print('Start')
+    app.include_router(AuthorRouter)
     await manager.connect()
     yield
     print('End')
 
 
-app: FastAPI = FastAPI(lifespan=lifespan)
-
-
-@app.get('/')
-async def test():
-    # await manager.execute(manager[Author].insert.values(name='Lex'), commit=True)
-    async with manager.get_session() as session:
-        # await session.execute(manager[Post].insert.values(title='NewState', author_id=1))
-        # await session.commit()
-        author: Author = (await session.execute(manager[Author].select)).scalar_one()
-        print(author.posts)
+app: FastAPI = FastAPI(
+                       lifespan=lifespan
+                       )
 
 
 if __name__ == '__main__':

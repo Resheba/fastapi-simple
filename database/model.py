@@ -9,6 +9,8 @@ class Author(manager.Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(35), nullable=False)
+    age = Column(Integer, nullable=False)
+    email = Column(String)
     posts: Mapped[list['Post']] = relationship(back_populates='author', lazy='selectin')
 
     def __repr__(self) -> str:
