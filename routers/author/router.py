@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends
 
+from database.model import Author
+
 from .schemas import AuthorInSchema, AuthorUpdateSchema
 from .depends import TokenValidator
 from database.repos import AuthorRepository
@@ -28,5 +30,5 @@ async def author_create(author: AuthorInSchema) -> int:
             dependencies=[Depends(TokenValidator)]
             )
 async def author_update(author: AuthorUpdateSchema):
-    author = await AuthorRepository.update(author)
+    author: Author = await AuthorRepository.update(author)
     return author
