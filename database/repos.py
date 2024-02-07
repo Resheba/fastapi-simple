@@ -3,7 +3,7 @@ from sqlalchemy import Insert, Result, Select, Update, insert, select, update
 from database import manager
 from database.model import Author
 
-from routers.author.shemas import AuthorInSchema, AuthorUpdateSchema
+from routers.author.schemas import AuthorInSchema, AuthorUpdateSchema
 from ._abcrepos import Repository
 
 

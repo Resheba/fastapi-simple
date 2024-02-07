@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import HTTPException, Query, Depends
+from fastapi import HTTPException, Query
 
 
 class TokenValidator:

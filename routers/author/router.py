@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from .shemas import AuthorInSchema, AuthorUpdateSchema
+from .schemas import AuthorInSchema, AuthorUpdateSchema
 from .depends import TokenValidator
 from database.repos import AuthorRepository
 
