@@ -9,6 +9,7 @@ load_dotenv(override=True)
 class Settings:
     # NEW VARS PUT BELOW
     DB_DSN: Final[str] = os.getenv('DB_DSN')
+    REDIS_DSN: Final[str] = os.getenv('REDIS_DSN')
 
     @classmethod
     def __get_vars__(cls) -> dict[str, str | None]:

@@ -1,15 +1,15 @@
-from typing import AsyncGenerator
 import uvicorn
+from typing import AsyncGenerator
 from fastapi import FastAPI
 
 from database import manager
 
-from routers import AuthorRouter
+from routers import AuthorRouter, ArithmRouter
 
 
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print('Start')
-    app.include_router(AuthorRouter)
+    app.include_router(AuthorRouter); app.include_router(ArithmRouter)
     await manager.connect()
     yield
     print('End')
