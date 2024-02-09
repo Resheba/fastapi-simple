@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from database.model import Author
 
 from .schemas import AuthorInSchema, AuthorUpdateSchema
-from .depends import TokenValidator
+from .depends import TokenValidator, AuthorUpdateQuery, TokenLazyValidator
 from database.repos import AuthorRepository
 
 
@@ -32,3 +33,52 @@ async def author_create(author: AuthorInSchema) -> int:
 async def author_update(author: AuthorUpdateSchema):
     author: Author = await AuthorRepository.update(author)
     return author
+
+
+@router.get('/get',
+            name='Получить Авторов',
+            tags=['get'],
+            response_model=list[AuthorInSchema | AuthorUpdateSchema]
+            )
+async def authors_get(
+                      query: Annotated[AuthorUpdateQuery, Depends(AuthorUpdateQuery)], 
+                      token: Annotated[TokenLazyValidator, Depends(TokenLazyValidator)]
+                      ):
+    author: AuthorUpdateSchema = AuthorUpdateSchema(name=query.name, age=query.age, email=query.email)
+    authors: list[Author] = await AuthorRepository.get(author=author)
+    if token.is_valid():
+        return (AuthorUpdateSchema.model_validate(author, from_attributes=True) for author in authors)
+    return authors
+
+
+@router.get('/{id}',
+            name='Получить Автора',
+            tags=['get'],
+            response_model=AuthorInSchema,
+            responses={
+                   404: {'description': 'No Author with {id=}'}
+               }
+            )
+async def author_get(id: Annotated[int, Path(ge=1, title='Идентификатор', description='Идентификатор автора')]):
+    author_schema: AuthorUpdateSchema = AuthorUpdateSchema(id=id)
+    author: Author | None = await AuthorRepository.get(author=author_schema, many=False)
+    if author:
+        return author
+    raise HTTPException(status_code=404, detail=f'No Author with {id=}')
+
+
+@router.delete('/{id}',
+               name='Удалить Автора',
+               tags=['delete'],
+               response_model=int,
+               dependencies=[Depends(TokenValidator)],
+               responses={
+                   404: {'description': 'No Author with {id=}'},
+                   400: {'description': 'Token missed'}
+               }
+               )
+async def author_delete(id: Annotated[int, Path(ge=1, title='Идентификатор', description='Идентификатор автора')]):
+    author_id: int | None = await AuthorRepository.delete(id=id)
+    if author_id:
+        return author_id
+    raise HTTPException(status_code=404, detail=f'No Author with {id=}')

@@ -15,6 +15,6 @@ class AuthorInSchema(BaseModel):
     
 
 class AuthorUpdateSchema(AuthorInSchema):
-    id: int = Field(ge=1)
-    name: str = None
-    age: int = None
+    id: int = Field(ge=1, default=None)
+    name: str | None = None
+    age: int | None = None
