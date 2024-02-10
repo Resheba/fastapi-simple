@@ -10,7 +10,7 @@ from routers import AuthorRouter, ArithmRouter
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print('Start')
     app.include_router(AuthorRouter); app.include_router(ArithmRouter)
-    await manager.connect()
+    await manager.connect(create_all=False)
     yield
     print('End')
 
