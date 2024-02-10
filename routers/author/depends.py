@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import HTTPException, Query
 from pydantic import EmailStr
@@ -29,3 +29,10 @@ class AuthorUpdateQuery:
                 email: Annotated[EmailStr, Query(max_length=50, title='Почта', description='Почта автора')] = None
                 ) -> None:
         self.name: str = name; self.age: int = age; self.email: EmailStr = email
+        self._params: dict[str, Any] = {'name': self.name, 'age': self.age, 'email': self.email}
+
+    def params(self) -> dict[str, int | str]:
+        return {
+            k:v for k, v in self._params.items()
+            if v
+        }

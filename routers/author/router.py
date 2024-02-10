@@ -44,7 +44,7 @@ async def authors_get(
                       query: Annotated[AuthorUpdateQuery, Depends(AuthorUpdateQuery)], 
                       token: Annotated[TokenLazyValidator, Depends(TokenLazyValidator)]
                       ):
-    author: AuthorUpdateSchema = AuthorUpdateSchema(name=query.name, age=query.age, email=query.email)
+    author: AuthorUpdateSchema = AuthorUpdateSchema(**query.params())
     authors: list[Author] = await AuthorRepository.get(author=author)
     if token.is_valid():
         return (AuthorUpdateSchema.model_validate(author, from_attributes=True) for author in authors)
