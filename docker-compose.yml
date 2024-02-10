@@ -1,0 +1,42 @@
+version: "3.7"
+services:
+  redis:
+    image: redis:latest
+    container_name: redis_app
+    command: --port 8765
+    expose: 
+      - 8765
+  
+  app:
+    build: 
+      context: .
+    container_name: fastapi_app
+    command: ["docker/app.sh"]
+    env_file:
+      - .env_docker
+    ports:
+      - 9999:8000
+    depends_on:
+      - redis
+  
+  celery:
+    build: 
+      context: .
+    container_name: celery_app
+    env_file:
+      - .env_docker
+    command: ["docker/celery.sh"]
+    depends_on:
+      - redis
+
+  flower:
+    build: 
+      context: .
+    container_name: flower_app
+    env_file:
+      - .env_docker
+    command: ["docker/flower.sh"]
+    depends_on:
+      - celery
+    ports:
+      - 8888:5555
