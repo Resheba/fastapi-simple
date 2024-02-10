@@ -1,11 +1,13 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from database import SessionDepend
 from database.model import Author
+from database.repos import AuthorRepository
 
 from .schemas import AuthorInSchema, AuthorUpdateSchema
 from .depends import TokenValidator, AuthorUpdateQuery, TokenLazyValidator
-from database.repos import AuthorRepository
 
 
 router: APIRouter = APIRouter(
@@ -19,8 +21,11 @@ router: APIRouter = APIRouter(
              tags=['create'],
              dependencies=[Depends(TokenValidator)]
              )
-async def author_create(author: AuthorInSchema) -> int:
-    author_id: int = await AuthorRepository.create(author)
+async def author_create(
+                        author: AuthorInSchema,
+                        session: Annotated[AsyncSession, Depends(SessionDepend)]
+                        ) -> int:
+    author_id: int = await AuthorRepository(session).create(author)
     return author_id
 
 
@@ -30,8 +35,11 @@ async def author_create(author: AuthorInSchema) -> int:
             response_model=AuthorInSchema,
             dependencies=[Depends(TokenValidator)]
             )
-async def author_update(author: AuthorUpdateSchema):
-    author: Author = await AuthorRepository.update(author)
+async def author_update(
+                        author: AuthorUpdateSchema,
+                        session: Annotated[AsyncSession, Depends(SessionDepend)]
+                        ):
+    author: Author = await AuthorRepository(session).update(author)
     return author
 
 
@@ -42,10 +50,11 @@ async def author_update(author: AuthorUpdateSchema):
             )
 async def authors_get(
                       query: Annotated[AuthorUpdateQuery, Depends(AuthorUpdateQuery)], 
-                      token: Annotated[TokenLazyValidator, Depends(TokenLazyValidator)]
+                      token: Annotated[TokenLazyValidator, Depends(TokenLazyValidator)],
+                      session: Annotated[AsyncSession, Depends(SessionDepend)]
                       ):
     author: AuthorUpdateSchema = AuthorUpdateSchema(**query.params())
-    authors: list[Author] = await AuthorRepository.get(author=author)
+    authors: list[Author] = await AuthorRepository(session).get(author=author)
     if token.is_valid():
         return (AuthorUpdateSchema.model_validate(author, from_attributes=True) for author in authors)
     return authors
@@ -59,9 +68,12 @@ async def authors_get(
                    404: {'description': 'No Author with {id=}'}
                }
             )
-async def author_get(id: Annotated[int, Path(ge=1, title='Идентификатор', description='Идентификатор автора')]):
+async def author_get(
+                        id: Annotated[int, Path(ge=1, title='Идентификатор', description='Идентификатор автора')],
+                        session: Annotated[AsyncSession, Depends(SessionDepend)]
+                        ):
     author_schema: AuthorUpdateSchema = AuthorUpdateSchema(id=id)
-    author: Author | None = await AuthorRepository.get(author=author_schema, many=False)
+    author: Author | None = await AuthorRepository(session).get(author=author_schema, many=False)
     if author:
         return author
     raise HTTPException(status_code=404, detail=f'No Author with {id=}')
@@ -77,8 +89,11 @@ async def author_get(id: Annotated[int, Path(ge=1, title='Идентификат
                    400: {'description': 'Token missed'}
                }
                )
-async def author_delete(id: Annotated[int, Path(ge=1, title='Идентификатор', description='Идентификатор автора')]):
-    author_id: int | None = await AuthorRepository.delete(id=id)
+async def author_delete(
+                        id: Annotated[int, Path(ge=1, title='Идентификатор', description='Идентификатор автора')],
+                        session: Annotated[AsyncSession, Depends(SessionDepend)]
+                        ):
+    author_id: int | None = await AuthorRepository(session).delete(id=id)
     if author_id:
         return author_id
     raise HTTPException(status_code=404, detail=f'No Author with {id=}')

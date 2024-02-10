@@ -1,2 +1,2 @@
 from . import model
-from .manager import manager
+from .manager import manager, SessionDepend
