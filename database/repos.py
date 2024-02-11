@@ -3,7 +3,7 @@ from sqlalchemy import Delete, Insert, Result, Select, Sequence, Update, delete,
 
 from database.model import Author
 
-from routers.author.schemas import AuthorInSchema, AuthorUpdateSchema
+from routers.author.schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
 from ._abcrepos import Repository
 
 
@@ -30,11 +30,11 @@ class AuthorRepository(Repository):
             await session.commit()
             res_author: Author = (await session.execute(
                 select(self.model).where(self.model.id == author.id)
-                )).scalar_one()
+                )).scalar_one_or_none()
         return res_author
     
     async def get(self,
-                  author: AuthorUpdateSchema,
+                  author: AuthorQuerySchema,
                   many: bool = True
                   ) -> Author | Sequence[Author] | None:
         async with self.session as session:

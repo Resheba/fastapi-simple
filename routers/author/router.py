@@ -6,7 +6,7 @@ from database import SessionDepend
 from database.model import Author
 from database.repos import AuthorRepository
 
-from .schemas import AuthorInSchema, AuthorUpdateSchema
+from .schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
 from .depends import TokenValidator, AuthorUpdateQuery, TokenLazyValidator
 
 
@@ -46,17 +46,17 @@ async def author_update(
 @router.get('/get',
             name='Получить Авторов',
             tags=['get'],
-            response_model=list[AuthorInSchema | AuthorUpdateSchema]
+            response_model=list[AuthorInSchema | AuthorQuerySchema]
             )
 async def authors_get(
                       query: Annotated[AuthorUpdateQuery, Depends(AuthorUpdateQuery)], 
                       token: Annotated[TokenLazyValidator, Depends(TokenLazyValidator)],
                       session: Annotated[AsyncSession, Depends(SessionDepend)]
                       ):
-    author: AuthorUpdateSchema = AuthorUpdateSchema(**query.params())
+    author: AuthorQuerySchema = AuthorQuerySchema(**query.params())
     authors: list[Author] = await AuthorRepository(session).get(author=author)
     if token.is_valid():
-        return (AuthorUpdateSchema.model_validate(author, from_attributes=True) for author in authors)
+        return (AuthorQuerySchema.model_validate(author, from_attributes=True) for author in authors)
     return authors
 
 
