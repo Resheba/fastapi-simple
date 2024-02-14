@@ -33,15 +33,15 @@ async def author_create(
 @router.put('/update',
             name='Изменение Автора',
             tags=['update'],
-            response_model=AuthorInSchema,
+            response_model=AuthorInSchema | None,
             dependencies=[Depends(TokenValidator)]
             )
 async def author_update(
                         author: AuthorUpdateSchema,
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
                         ):
-    author: Author = await AuthorRepository(session).update(author)
-    return author
+    author_orm: Author = await AuthorRepository(session).update(author)
+    return author_orm
 
 
 @router.get('/get',

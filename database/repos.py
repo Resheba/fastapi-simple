@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import Delete, Insert, Result, Select, Sequence, Update, delete, insert, select, update
+from sqlalchemy import Delete, Insert, Result, Select, Sequence, Update, delete, select, update
 
 from database.model import Author
 
@@ -22,15 +22,14 @@ class AuthorRepository(Repository):
     
     async def update(self,
                      author: AuthorUpdateSchema
-                     ) -> Author:
+                     ) -> Author | None:
         async with self.session as session:
-            stmt: Update = update(self.model).where(self.model.id == author.id).values(**AuthorInSchema.model_validate(author).model_dump(exclude_none=True))
-            await session.execute(stmt)
-            await session.commit()
-            res_author: Author = (await session.execute(
-                select(self.model).where(self.model.id == author.id)
-                )).scalar_one_or_none()
-        return res_author
+            author_orm: Author = await session.get(Author, author.id)
+            if author_orm:
+                [setattr(author_orm, attr, value) for attr, value in author.model_dump(exclude_none=True).items()]
+                # author_orm.__dict__.update(author.model_dump(exclude_none=True))
+                await session.commit()
+                return author_orm
     
     async def get(self,
                   author: AuthorQuerySchema,
