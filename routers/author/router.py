@@ -19,14 +19,15 @@ router: APIRouter = APIRouter(
 @router.post('/create',
              name='Создание Автора',
              tags=['create'],
-             dependencies=[Depends(TokenValidator)]
+             dependencies=[Depends(TokenValidator)],
+             response_model=AuthorUpdateSchema
              )
 async def author_create(
                         author: AuthorInSchema,
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
-                        ) -> int:
-    author_id: int = await AuthorRepository(session).create(author)
-    return author_id
+                        ):
+    author_orm: Author = await AuthorRepository(session).create(author)
+    return author_orm
 
 
 @router.put('/update',

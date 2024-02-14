@@ -13,13 +13,12 @@ class AuthorRepository(Repository):
 
     async def create(self,
                      author: AuthorInSchema
-                     ) -> int:
+                     ) -> Author:
         async with self.session as session:
-            stmt: Insert = insert(self.model).values(**author.model_dump()).returning(self.model.id)
-            result: Result = await session.execute(stmt)
-            author_id: int = result.scalar_one_or_none()
+            author_orm: Author = Author(**author.model_dump())
+            session.add(author_orm)
             await session.commit()
-        return author_id
+        return author_orm
     
     async def update(self,
                      author: AuthorUpdateSchema
