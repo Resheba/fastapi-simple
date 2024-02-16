@@ -4,12 +4,12 @@ from fastapi import FastAPI
 
 from database import manager
 
-from routers import AuthorRouter, ArithmRouter
+from routers import AuthorRouter, ArithmRouter, AuthRouter
 
 
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print('Start')
-    app.include_router(AuthorRouter); app.include_router(ArithmRouter)
+    app.include_router(AuthorRouter); app.include_router(ArithmRouter); app.include_router(AuthRouter)
     await manager.connect(create_all=False, expire_on_commit=False)
     yield
     print('End')
