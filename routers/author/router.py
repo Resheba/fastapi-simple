@@ -3,8 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import SessionDepend
-from database.model import Author
-from database.repos import AuthorRepository
+from .repos import Author, AuthorRepository
 
 from .schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
 from .depends import TokenValidator, AuthorUpdateQuery, TokenLazyValidator

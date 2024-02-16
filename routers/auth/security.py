@@ -1,8 +1,16 @@
+from hashlib import sha256
+from typing import Annotated
+
 from config import Settings
+from database import SessionDepend
 
 from datetime import timedelta
-from fastapi import Response, Security
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Response, Security, Depends, HTTPException
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearerCookie, JwtAuthorizationCredentials
+
+from .repos import User, UserRepository
+from .schemas import UserInSchema
 
 
 class JWTSecurity:
@@ -38,7 +46,31 @@ class JWTSecurity:
     
 
 class Auth:
+    @classmethod
+    async def login(
+                    cls,
+                    response: Response,
+                    user_schema: UserInSchema,
+                    session: Annotated[AsyncSession, Depends(SessionDepend)]
+        ) -> None:
+        user: User | None = await UserRepository(session).get(user_schema)
+        if not user:
+            raise HTTPException(403, detail='No user')
+        if await cls._verify_password(user_schema.password.get_secret_value(), user.hashed_password):
+            JWTSecurity.set_access_refresh(response=response, subject=dict(name=user.name))
+            return
+        raise HTTPException(403, detail='Bad password')
+
     @staticmethod
-    def login():
-        ...
-        
+    async def _verify_password(password: str, hash: str) -> bool:
+        print(sha256(bytes(password, encoding='utf-8')).hexdigest(), hash)
+        return sha256(bytes(password, encoding='utf-8')).hexdigest() == hash
+    
+    @staticmethod
+    async def subject(
+                    credentials: Annotated[JwtAuthorizationCredentials, Security(JWTSecurity.jwt_access)]
+        ) -> dict:
+        if credentials:
+            return credentials.subject
+        raise HTTPException(401, detail='Unauth')
+    

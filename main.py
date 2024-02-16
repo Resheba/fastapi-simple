@@ -16,7 +16,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app: FastAPI = FastAPI(
-                       lifespan=lifespan
+                       lifespan=lifespan,
+                       debug=True
                        )
 
 

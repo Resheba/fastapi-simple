@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import Delete, Insert, Result, Select, Sequence, Update, delete, select, update
+from sqlalchemy import Delete, Result, Select, Sequence, delete, select
 
 from database.model import Author
 
 from routers.author.schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
-from ._abcrepos import Repository
+
+from database._abcrepos import Repository
 
 
 class AuthorRepository(Repository):
