@@ -46,7 +46,6 @@ async def user_get(
             response_model=UserOutSchema
             )
 async def user_get_me(subject: Annotated[dict, Depends(Auth.subject)]):
-    print(subject)
     return subject
 
 

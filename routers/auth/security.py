@@ -63,7 +63,6 @@ class Auth:
 
     @staticmethod
     async def _verify_password(password: str, hash: str) -> bool:
-        print(sha256(bytes(password, encoding='utf-8')).hexdigest(), hash)
         return sha256(bytes(password, encoding='utf-8')).hexdigest() == hash
     
     @staticmethod
