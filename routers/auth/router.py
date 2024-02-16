@@ -52,8 +52,15 @@ async def user_get_me(subject: Annotated[dict, Depends(Auth.subject)]):
 
 @router.post('/login',
              name='Получить JWT Cookie',
-             tags=['login'],
              dependencies=[Depends(Auth.login)]
              )
 async def user_login():
+    return {'status': 200}
+
+
+@router.post('/refresh',
+             name='Обновить Access JWT',
+             dependencies=[Depends(Auth.refresh_access)]
+             )
+async def user_refresh():
     return {'status': 200}

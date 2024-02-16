@@ -74,3 +74,10 @@ class Auth:
             return credentials.subject
         raise HTTPException(401, detail='Unauth')
     
+    @staticmethod
+    async def refresh_access(
+                            credentials: Annotated[JwtAuthorizationCredentials, Security(JWTSecurity.jwt_refresh)], 
+                            response: Response
+                            ) -> None:
+        JWTSecurity.refresh(response=response, credentials=credentials)
+        
