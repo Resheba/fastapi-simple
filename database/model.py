@@ -29,3 +29,14 @@ class Post(manager.Base):
 
     def __repr__(self) -> str:
         return f'<Post {self.title[:7]}>'
+
+
+class User(manager.Base):
+    __tablename__ = 'user'
+
+    name = Column(String(30), nullable=False, primary_key=True)
+    hashed_password = Column(String, nullable=False)
+
+    def __repr__(self) -> str:
+        return f'<Post {self.name}>'
+    
