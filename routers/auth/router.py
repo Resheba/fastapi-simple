@@ -1,6 +1,8 @@
+import asyncio
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
+from fastapi_cache.decorator import cache
 
 from database import SessionDepend
 
@@ -27,15 +29,17 @@ async def user_create(
     return user_out
 
 
-@router.get('/user/{id}',
+@router.get('/user/{name}',
             name='Получить пользователя',
             tags=['get'],
             response_model=UserOutSchema | None
             )
+@cache(expire=10)
 async def user_get(
-                    user_schema: Annotated[UserQuerySchema, Depends()],
+                    username: Annotated[str, Path(alias='name', validation_alias='name')],
                     session: Annotated[AsyncSession, Depends(SessionDepend)]
                     ):
+    user_schema: UserQuerySchema = UserQuerySchema(name=username)
     user: User | None = await UserRepository(session).get(user_schema)
     return user
 
