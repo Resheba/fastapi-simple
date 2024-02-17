@@ -40,3 +40,18 @@ class UserRepository(Repository):
 
     async def delete():
         ...
+
+    async def verify(
+            self,
+            user_schema: UserInSchema
+                    ) -> bool:
+        async with self.session as session:
+            user: User | None = await session.get(User, user_schema.name)
+            if user and await self._verify_password(user_schema.password.get_secret_value(), user.hashed_password):
+                return True
+        return False
+
+    @staticmethod
+    async def _verify_password(password: str, hash: str) -> bool:
+        return sha256(bytes(password, encoding='utf-8')).hexdigest() == hash
+    

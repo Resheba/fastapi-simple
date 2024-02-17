@@ -1,16 +1,14 @@
-from hashlib import sha256
 from typing import Annotated
 
+from pydantic import BaseModel
+
 from config import Settings
-from database import SessionDepend
 
 from datetime import timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Response, Security, Depends, HTTPException
+from fastapi import Response, Security, HTTPException
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearerCookie, JwtAuthorizationCredentials
 
-from .repos import User, UserRepository
-from .schemas import UserInSchema
+from .schemas import SubjectSchema
 
 
 class JWTSecurity:
@@ -50,20 +48,11 @@ class Auth:
     async def login(
                     cls,
                     response: Response,
-                    user_schema: UserInSchema,
-                    session: Annotated[AsyncSession, Depends(SessionDepend)]
+                    subject: SubjectSchema | dict,
         ) -> None:
-        user: User | None = await UserRepository(session).get(user_schema)
-        if not user:
-            raise HTTPException(403, detail='No user')
-        if await cls._verify_password(user_schema.password.get_secret_value(), user.hashed_password):
-            JWTSecurity.set_access_refresh(response=response, subject=dict(name=user.name))
-            return
-        raise HTTPException(403, detail='Bad password')
-
-    @staticmethod
-    async def _verify_password(password: str, hash: str) -> bool:
-        return sha256(bytes(password, encoding='utf-8')).hexdigest() == hash
+         if issubclass(BaseModel, type(subject)):
+             subject: dict = subject.model_dump()
+         JWTSecurity.set_access_refresh(response=response, subject=subject)
     
     @staticmethod
     async def subject(
@@ -77,6 +66,9 @@ class Auth:
     async def refresh_access(
                             credentials: Annotated[JwtAuthorizationCredentials, Security(JWTSecurity.jwt_refresh)], 
                             response: Response
-                            ) -> None:
+                            ) -> bool:
+        if not credentials:
+            return False
         JWTSecurity.refresh(response=response, credentials=credentials)
+        return True
         
