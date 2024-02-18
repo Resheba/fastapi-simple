@@ -3,9 +3,10 @@ from typing import Annotated
 from pydantic import BaseModel
 
 from config import Settings
+from core import BaseHTTPException
 
 from datetime import timedelta
-from fastapi import Response, Security, HTTPException
+from fastapi import Response, Security, status
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearerCookie, JwtAuthorizationCredentials
 
 from .schemas import SubjectSchema
@@ -60,7 +61,7 @@ class Auth:
         ) -> dict:
         if credentials:
             return credentials.subject
-        raise HTTPException(401, detail='Unauth')
+        raise BaseHTTPException(status.HTTP_401_UNAUTHORIZED, msg='Login required')
     
     @staticmethod
     async def refresh_access(

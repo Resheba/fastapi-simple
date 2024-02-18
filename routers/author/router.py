@@ -1,10 +1,11 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core import BaseHTTPException, BaseResponse
 from database import SessionDepend
-from .repos import Author, AuthorRepository
 
+from .repos import Author, AuthorRepository
 from .schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
 from .depends import TokenValidator, AuthorUpdateQuery, TokenLazyValidator
 
@@ -15,24 +16,24 @@ router: APIRouter = APIRouter(
     )
 
 
-@router.post('/create',
+@router.post('',
              name='Создание Автора',
              tags=['create'],
              dependencies=[Depends(TokenValidator)],
-             response_model=AuthorUpdateSchema
+             response_model=BaseResponse[AuthorUpdateSchema]
              )
 async def author_create(
                         author: AuthorInSchema,
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
                         ):
     author_orm: Author = await AuthorRepository(session).create(author)
-    return author_orm
+    return BaseResponse(status='success', data=author_orm)
 
 
-@router.put('/update',
+@router.put('',
             name='Изменение Автора',
             tags=['update'],
-            response_model=AuthorInSchema | None,
+            response_model=BaseResponse[AuthorInSchema | None],
             dependencies=[Depends(TokenValidator)]
             )
 async def author_update(
@@ -40,13 +41,13 @@ async def author_update(
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
                         ):
     author_orm: Author = await AuthorRepository(session).update(author)
-    return author_orm
+    return BaseResponse(status='success', data=author_orm)
 
 
-@router.get('/get',
+@router.get('',
             name='Получить Авторов',
             tags=['get'],
-            response_model=list[AuthorInSchema | AuthorQuerySchema]
+            response_model=BaseResponse[list[AuthorInSchema | AuthorQuerySchema]]
             )
 async def authors_get(
                       query: Annotated[AuthorUpdateQuery, Depends(AuthorUpdateQuery)], 
@@ -56,14 +57,14 @@ async def authors_get(
     author: AuthorQuerySchema = AuthorQuerySchema(**query.params())
     authors: list[Author] = await AuthorRepository(session).get(author=author)
     if token.is_valid():
-        return (AuthorQuerySchema.model_validate(author, from_attributes=True) for author in authors)
-    return authors
+        return BaseResponse(status='success', data=(AuthorQuerySchema.model_validate(author, from_attributes=True) for author in authors))
+    return BaseResponse(status='success', data=authors)
 
 
 @router.get('/{id}',
             name='Получить Автора',
             tags=['get'],
-            response_model=AuthorInSchema,
+            response_model=BaseResponse[AuthorInSchema],
             responses={
                    404: {'description': 'No Author with {id=}'}
                }
@@ -75,14 +76,15 @@ async def author_get(
     author_schema: AuthorUpdateSchema = AuthorUpdateSchema(id=id)
     author: Author | None = await AuthorRepository(session).get(author=author_schema, many=False)
     if author:
-        return author
-    raise HTTPException(status_code=404, detail=f'No Author with {id=}')
+        return BaseResponse(status='success', data=author)
+    raise BaseHTTPException(status_code=status.HTTP_404_NOT_FOUND, msg='Not found')
 
 
 @router.delete('/{id}',
                name='Удалить Автора',
                tags=['delete'],
-               response_model=int,
+               response_model=BaseResponse,
+               response_model_exclude_none=True,
                dependencies=[Depends(TokenValidator)],
                responses={
                    404: {'description': 'No Author with {id=}'},
@@ -95,5 +97,6 @@ async def author_delete(
                         ):
     author_id: int | None = await AuthorRepository(session).delete(id=id)
     if author_id:
-        return author_id
-    raise HTTPException(status_code=404, detail=f'No Author with {id=}')
+        return BaseResponse(status='success', msg='Successful deleted')
+    raise BaseHTTPException(status_code=status.HTTP_404_NOT_FOUND, msg='Not found')
+

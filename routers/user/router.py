@@ -15,7 +15,7 @@ router: APIRouter = APIRouter(
 )
 
 
-@router.post('/create',
+@router.post('',
              name='Создание пользователя',
              tags=['create'],
              response_model=UserOutSchema
