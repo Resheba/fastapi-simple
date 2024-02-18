@@ -8,7 +8,7 @@ from redis.asyncio import from_url
 from database import manager
 from config import Settings
 
-from routers import AuthorRouter, ArithmRouter, AuthRouter
+from routers import AuthorRouter, ArithmRouter, UserRouter
 
 
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         prefix='fcached'
         )
 
-    app.include_router(AuthorRouter); app.include_router(ArithmRouter); app.include_router(AuthRouter)
+    app.include_router(AuthorRouter); app.include_router(ArithmRouter); app.include_router(UserRouter)
     await manager.connect(create_all=False, expire_on_commit=False)
     print('Start')
     yield

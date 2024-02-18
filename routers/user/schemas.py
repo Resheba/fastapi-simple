@@ -12,7 +12,3 @@ class UserOutSchema(BaseModel):
 
 class UserQuerySchema(UserOutSchema):
     pass
-
-
-class SubjectSchema(UserOutSchema):
-    pass

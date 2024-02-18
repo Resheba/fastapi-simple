@@ -5,7 +5,7 @@ from sqlalchemy import Delete, Insert, Result, Select, Sequence, Update, delete,
 
 from database.model import User
 
-from routers.auth.schemas import UserInSchema, UserQuerySchema
+from .schemas import UserInSchema, UserQuerySchema
 
 from database._abcrepos import Repository
 
