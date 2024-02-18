@@ -22,4 +22,19 @@ class AuthorUpdateSchema(AuthorInSchema):
 
 class AuthorQuerySchema(AuthorUpdateSchema):
     id: int = Field(default=None)
+
+
+class Post(BaseModel):
+    id: int
+    title: str
+    author_id: int
+    text: Optional[str] = None
+
+
+class AuthorDTO(BaseModel):
+    id: int
+    name: str
+    age: int
+    email: Optional[EmailStr] = None
+    # posts: list[Post] = Field(default_factory=list)
     

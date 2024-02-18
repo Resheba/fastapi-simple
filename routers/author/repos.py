@@ -2,10 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import Delete, Result, Select, Sequence, delete, select
 
 from database.model import Author
-
-from routers.author.schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
-
 from database._abcrepos import Repository
+from core import SerializatorDTO
+
+from .schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema, AuthorDTO
 
 
 class AuthorRepository(Repository):
@@ -14,34 +14,35 @@ class AuthorRepository(Repository):
 
     async def create(self,
                      author: AuthorInSchema
-                     ) -> Author:
+                     ) -> AuthorDTO:
         async with self.session as session:
             author_orm: Author = Author(**author.model_dump())
             session.add(author_orm)
             await session.commit()
-        return author_orm
+            # await session.refresh(author_orm)
+            return SerializatorDTO.fromORM(author_orm, AuthorDTO)
     
     async def update(self,
                      author: AuthorUpdateSchema
-                     ) -> Author | None:
+                     ) -> AuthorDTO | None:
         async with self.session as session:
             author_orm: Author = await session.get(Author, author.id)
             if author_orm:
                 [setattr(author_orm, attr, value) for attr, value in author.model_dump(exclude_none=True).items()]
                 # author_orm.__dict__.update(author.model_dump(exclude_none=True))
                 await session.commit()
-                return author_orm
+                return SerializatorDTO.fromORM(author_orm, AuthorDTO)
     
     async def get(self,
                   author: AuthorQuerySchema,
                   many: bool = True
-                  ) -> Author | Sequence[Author] | None:
+                  ) -> AuthorDTO | Sequence[AuthorDTO] | None:
         async with self.session as session:
             stmt: Select = select(self.model).filter_by(**author.model_dump(exclude_none=True))
             result: Result = await session.execute(stmt)
             if many:
-                return result.scalars().all()
-            return result.scalar_one_or_none()
+                return SerializatorDTO.fromORM(result.scalars().all(), AuthorDTO)
+            return SerializatorDTO.fromORM(result.scalar_one_or_none(), AuthorDTO)
     
     async def delete(self,
                      id: int
@@ -52,3 +53,4 @@ class AuthorRepository(Repository):
             await session.commit()
             rid: int | None = result.scalar_one_or_none()
             return rid
+        

@@ -6,7 +6,7 @@ from core import BaseHTTPException, BaseResponse
 from database import SessionDepend
 
 from .repos import Author, AuthorRepository
-from .schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema
+from .schemas import AuthorInSchema, AuthorUpdateSchema, AuthorQuerySchema, AuthorDTO
 from .depends import TokenValidator, AuthorUpdateQuery, TokenLazyValidator
 
 
@@ -26,7 +26,7 @@ async def author_create(
                         author: AuthorInSchema,
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
                         ):
-    author_orm: Author = await AuthorRepository(session).create(author)
+    author_orm: AuthorDTO = await AuthorRepository(session).create(author)
     return BaseResponse(status='success', data=author_orm)
 
 
@@ -40,7 +40,7 @@ async def author_update(
                         author: AuthorUpdateSchema,
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
                         ):
-    author_orm: Author = await AuthorRepository(session).update(author)
+    author_orm: AuthorDTO = await AuthorRepository(session).update(author)
     return BaseResponse(status='success', data=author_orm)
 
 
@@ -55,7 +55,7 @@ async def authors_get(
                       session: Annotated[AsyncSession, Depends(SessionDepend)]
                       ):
     author: AuthorQuerySchema = AuthorQuerySchema(**query.params())
-    authors: list[Author] = await AuthorRepository(session).get(author=author)
+    authors: list[AuthorDTO] = await AuthorRepository(session).get(author=author)
     if token.is_valid():
         return BaseResponse(status='success', data=(AuthorQuerySchema.model_validate(author, from_attributes=True) for author in authors))
     return BaseResponse(status='success', data=authors)
@@ -74,7 +74,7 @@ async def author_get(
                         session: Annotated[AsyncSession, Depends(SessionDepend)]
                         ):
     author_schema: AuthorUpdateSchema = AuthorUpdateSchema(id=id)
-    author: Author | None = await AuthorRepository(session).get(author=author_schema, many=False)
+    author: AuthorDTO | None = await AuthorRepository(session).get(author=author_schema, many=False)
     if author:
         return BaseResponse(status='success', data=author)
     raise BaseHTTPException(status_code=status.HTTP_404_NOT_FOUND, msg='Not found')
