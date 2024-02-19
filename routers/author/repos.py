@@ -12,6 +12,7 @@ class AuthorRepository(Repository):
     model: Author = Author
     session: AsyncSession
 
+    @SerializatorDTO(AuthorDTO)
     async def create(self,
                      author: AuthorInSchema
                      ) -> AuthorDTO:
@@ -20,8 +21,9 @@ class AuthorRepository(Repository):
             session.add(author_orm)
             await session.commit()
             # await session.refresh(author_orm)
-            return SerializatorDTO.fromORM(author_orm, AuthorDTO)
+            return author_orm
     
+    @SerializatorDTO(AuthorDTO)
     async def update(self,
                      author: AuthorUpdateSchema
                      ) -> AuthorDTO | None:
@@ -31,8 +33,9 @@ class AuthorRepository(Repository):
                 [setattr(author_orm, attr, value) for attr, value in author.model_dump(exclude_none=True).items()]
                 # author_orm.__dict__.update(author.model_dump(exclude_none=True))
                 await session.commit()
-                return SerializatorDTO.fromORM(author_orm, AuthorDTO)
+                return author_orm
     
+    @SerializatorDTO(AuthorDTO)
     async def get(self,
                   author: AuthorQuerySchema,
                   many: bool = True
@@ -41,8 +44,8 @@ class AuthorRepository(Repository):
             stmt: Select = select(self.model).filter_by(**author.model_dump(exclude_none=True))
             result: Result = await session.execute(stmt)
             if many:
-                return SerializatorDTO.fromORM(result.scalars().all(), AuthorDTO)
-            return SerializatorDTO.fromORM(result.scalar_one_or_none(), AuthorDTO)
+                return result.scalars().all()
+            return result.scalar_one_or_none()
     
     async def delete(self,
                      id: int
